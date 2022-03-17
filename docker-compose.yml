@@ -1,0 +1,61 @@
+version: '3.4'
+
+services:
+  drmnotepad:
+    image: drmnotepad
+    container_name: back
+    build:
+      context: Api/drm_NotePad/
+      dockerfile: Dockerfile
+    ports:
+      - 5000:80
+    networks:
+      - drm-api
+
+  db:
+    image: mariadb:10.3
+    restart: always
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports: 
+      - 3306:3306
+    volumes:
+      - persistent:/var/lib/mysql
+    expose:
+      - "3306"
+    networks:
+      - drm-api
+
+  front:
+    container_name: front
+    build: ./front/
+    command: npm run serve
+    volumes:
+      - ./front/src/:/usr/src/app/src/
+      - ./front/public/:/usr/src/app/public/
+    environment:
+        - CHOKIDAR_USEPOLLING=true
+    ports:
+      - '80:8080'
+    networks:
+      - drm-api
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: pma
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - drm-api
+
+networks:
+  drm-api:
+    driver: "bridge"
+
+volumes:
+  persistent:
+    driver: local
